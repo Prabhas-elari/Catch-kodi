@@ -1,0 +1,499 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#70cf62">
+<title>Catch the Chicken 🐔</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  background: linear-gradient(#9be8ff, #e3ffd0);
+  color: #263b25;
+  text-align: center;
+  min-height: 100vh;
+  padding: 16px 10px;
+}
+
+h1 {
+  font-size: clamp(28px, 7vw, 44px);
+  margin: 8px 0;
+  color: #ed6c18;
+  text-shadow: 2px 3px white;
+}
+
+.subtitle {
+  margin: 5px 0 18px;
+  font-weight: bold;
+}
+
+.game-container {
+  width: 100%;
+  max-width: 650px;
+  margin: auto;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.stat {
+  background: white;
+  border: 3px solid #6fbd51;
+  border-radius: 15px;
+  padding: 10px 4px;
+  font-weight: bold;
+  box-shadow: 0 4px 0 #49973d;
+}
+
+.stat span {
+  display: block;
+  font-size: 25px;
+  color: #e66a18;
+}
+
+#arena {
+  position: relative;
+  height: clamp(350px, 58vh, 520px);
+  min-height: 350px;
+  background: linear-gradient(#a7e8ff 0%, #d4f8c2 65%, #65c75a 65%);
+  border: 5px solid #ffffff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 8px 0 #65a74b;
+  touch-action: manipulation;
+}
+
+.cloud {
+  position: absolute;
+  font-size: 35px;
+  pointer-events: none;
+}
+
+.cloud.one { top: 15px; left: 12%; }
+.cloud.two { top: 55px; right: 12%; }
+
+#chicken {
+  position: absolute;
+  display: none;
+  z-index: 5;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: clamp(55px, 13vw, 78px);
+  cursor: pointer;
+  line-height: 1;
+  width: 90px;
+  height: 95px;
+  transform: rotate(-8deg);
+  filter: drop-shadow(2px 5px 2px #0003);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#chicken:active {
+  transform: scale(.85);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: #244d32bb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  padding: 20px;
+}
+
+.overlay h2 {
+  font-size: 30px;
+  margin: 8px;
+}
+
+.overlay p {
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.main-btn {
+  background: #ff8b20;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  padding: 15px 28px;
+  font-size: 19px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #c75d0a;
+  margin: 8px;
+}
+
+.main-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #c75d0a;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.small-btn {
+  border: 2px solid white;
+  background: #4d9e4b;
+  color: white;
+  padding: 11px 18px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+#message {
+  min-height: 32px;
+  font-size: 19px;
+  font-weight: bold;
+  color: #a74712;
+  margin: 12px;
+}
+
+footer {
+  margin: 20px auto 5px;
+  color: #42683c;
+  font-size: 13px;
+}
+
+@media(max-width: 380px) {
+  .stat { font-size: 13px; }
+  .stat span { font-size: 21px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="game-container">
+
+  <h1>🐔 Catch the Chicken!</h1>
+  <p class="subtitle">Catch the crazy chicken before time runs out! 😂</p>
+
+  <div class="stats">
+    <div class="stat">
+      SCORE
+      <span id="score">0</span>
+    </div>
+
+    <div class="stat">
+      TIME
+      <span id="time">30</span>
+    </div>
+
+    <div class="stat">
+      BEST
+      <span id="best">0</span>
+    </div>
+  </div>
+
+  <div id="arena">
+
+    <div class="cloud one">☁️</div>
+    <div class="cloud two">☁️</div>
+
+    <button id="chicken" aria-label="Catch the chicken">
+      🐔
+    </button>
+
+    <div class="overlay" id="overlay">
+      <h2 id="overlayTitle">Ready? 🐥</h2>
+      <p id="overlayText">
+        Catch as many chickens as possible in 30 seconds!<br>
+        Be quick. The chicken is very clever! 😂
+      </p>
+      <button class="main-btn" id="startBtn">
+        START GAME 🚀
+      </button>
+    </div>
+
+  </div>
+
+  <div id="message">Waiting for the chicken... 🐔</div>
+
+  <div class="controls">
+    <button class="small-btn" id="soundBtn">
+      🔊 Sound ON
+    </button>
+
+    <button class="small-btn" id="shareBtn">
+      📲 Share Game
+    </button>
+  </div>
+
+  <footer>
+    Made with ❤️ and chicken madness!<br>
+    Catch the Chicken © 2026
+  </footer>
+
+</div>
+
+<script>
+const chicken = document.getElementById("chicken");
+const arena = document.getElementById("arena");
+const overlay = document.getElementById("overlay");
+const startBtn = document.getElementById("startBtn");
+
+const scoreText = document.getElementById("score");
+const timeText = document.getElementById("time");
+const bestText = document.getElementById("best");
+const message = document.getElementById("message");
+
+let score = 0;
+let time = 30;
+let best = Number(localStorage.getItem("chickenBest")) || 0;
+let playing = false;
+let timer = null;
+let moveTimer = null;
+let soundOn = true;
+let audioContext = null;
+
+bestText.textContent = best;
+
+const messages = [
+  "Nice catch! 😂",
+  "Chicken is crying! 🐔",
+  "You're too fast! ⚡",
+  "One more! Catch it! 😈",
+  "The chicken needs a holiday! 🏖️",
+  "Excellent chicken hunter! 🏆",
+  "Ayyo! Chicken caught! 🤣"
+];
+
+// Sound effects generated in the browser
+function playSound(type) {
+  if (!soundOn) return;
+
+  try {
+    const AudioCtx =
+      window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioCtx) return;
+
+    if (!audioContext) audioContext = new AudioCtx();
+
+    if (audioContext.state === "suspended") {
+      audioContext.resume();
+    }
+
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    const now = audioContext.currentTime;
+
+    if (type === "catch") {
+      oscillator.frequency.setValueAtTime(600, now);
+      oscillator.frequency.exponentialRampToValueAtTime(
+        950, now + 0.1
+      );
+    } else {
+      oscillator.frequency.setValueAtTime(300, now);
+      oscillator.frequency.exponentialRampToValueAtTime(
+        120, now + 0.3
+      );
+    }
+
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(
+      0.001, now + 0.3
+    );
+
+    oscillator.start(now);
+    oscillator.stop(now + 0.3);
+  } catch (error) {
+    // Game continues even if sound is unavailable.
+  }
+}
+
+function moveChicken() {
+  if (!playing) return;
+
+  const maxX = Math.max(0, arena.clientWidth - chicken.offsetWidth);
+  const maxY = Math.max(0, arena.clientHeight - chicken.offsetHeight);
+
+  const x = Math.random() * maxX;
+  const y = Math.random() * maxY;
+
+  chicken.style.left = x + "px";
+  chicken.style.top = y + "px";
+
+  const rotation = Math.random() * 30 - 15;
+  chicken.style.transform = "rotate(" + rotation + "deg)";
+}
+
+function scheduleMovement() {
+  clearInterval(moveTimer);
+
+  // Chicken gets faster as the score increases.
+  const speed = Math.max(350, 1100 - score * 35);
+
+  moveTimer = setInterval(moveChicken, speed);
+}
+
+function startGame() {
+  clearInterval(timer);
+  clearInterval(moveTimer);
+
+  score = 0;
+  time = 30;
+  playing = true;
+
+  scoreText.textContent = score;
+  timeText.textContent = time;
+  message.textContent = "GO GO GO! Catch it! 😂";
+
+  overlay.style.display = "none";
+  chicken.style.display = "block";
+
+  moveChicken();
+  scheduleMovement();
+  playSound("catch");
+
+  timer = setInterval(() => {
+    time--;
+    timeText.textContent = time;
+
+    if (time === 10) {
+      message.textContent = "Only 10 seconds left! Hurry! 😱";
+    }
+
+    if (time <= 0) {
+      endGame();
+    }
+  }, 1000);
+}
+
+function catchChicken(event) {
+  if (event) event.stopPropagation();
+  if (!playing) return;
+
+  score++;
+  scoreText.textContent = score;
+
+  playSound("catch");
+
+  const randomMessage =
+    messages[Math.floor(Math.random() * messages.length)];
+
+  message.textContent = randomMessage;
+
+  if (score > best) {
+    best = score;
+    bestText.textContent = best;
+    localStorage.setItem("chickenBest", best);
+  }
+
+  moveChicken();
+  scheduleMovement();
+}
+
+function endGame() {
+  playing = false;
+
+  clearInterval(timer);
+  clearInterval(moveTimer);
+
+  chicken.style.display = "none";
+
+  playSound("end");
+
+  let result;
+
+  if (score >= 25) {
+    result = "LEGENDARY CHICKEN HUNTER! 🏆🔥";
+  } else if (score >= 15) {
+    result = "AMAZING! Chicken master! 😎";
+  } else if (score >= 8) {
+    result = "GOOD JOB! Nice catching! 😂";
+  } else {
+    result = "The chicken defeated you! 🤣";
+  }
+
+  overlay.style.display = "flex";
+  document.getElementById("overlayTitle").textContent =
+    "GAME OVER! 🎮";
+
+  document.getElementById("overlayText").innerHTML =
+    "Your score: <b>" + score + "</b><br>" +
+    "Best score: <b>" + best + "</b><br><br>" +
+    result;
+
+  startBtn.textContent = "PLAY AGAIN 🔄";
+  message.textContent = "Game finished! 🐔";
+}
+
+startBtn.addEventListener("click", startGame);
+chicken.addEventListener("click", catchChicken);
+
+// Also support mobile touch and keyboard users.
+chicken.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    catchChicken(event);
+  }
+});
+
+document.getElementById("soundBtn").addEventListener("click", () => {
+  soundOn = !soundOn;
+
+  document.getElementById("soundBtn").textContent =
+    soundOn ? "🔊 Sound ON" : "🔇 Sound OFF";
+
+  if (soundOn) playSound("catch");
+});
+
+document.getElementById("shareBtn").addEventListener("click", async () => {
+  const link = window.location.href;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: "Catch the Chicken!",
+        text: "Can you beat my chicken-catching score? 😂",
+        url: link
+      });
+    } catch (error) {
+      // Sharing cancelled.
+    }
+  } else if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(link);
+      alert("Game link copied! Share with your friends.");
+    } catch (error) {
+      alert("Copy your game link from the browser address bar.");
+    }
+  } else {
+    alert("Copy your game link from the browser address bar.");
+  }
+});
+</script>
+
+</body>
+</html>
